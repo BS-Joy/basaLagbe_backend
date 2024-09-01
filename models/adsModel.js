@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const adsSchema = mongoose.Schema({
+    authorId: {
+        type: String,
+        require: true
+    },
     title: {
         type: String,
         required: true
@@ -51,6 +55,6 @@ const adsSchema = mongoose.Schema({
 }
 );
 
-const Ads = mongoose.model('ads', adsSchema);
+const Ads = mongoose.models.ads || mongoose.model('ads', adsSchema);
 
 export default Ads;

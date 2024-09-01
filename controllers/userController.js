@@ -5,23 +5,26 @@ import bcrypt from "bcryptjs";
 // post request
 export const createUser = async (req, res) => {
   try {
-    const { name, email, password, userRole } = req.body;
+    const { username, email, password, userRole, bookmarkedAds } = req.body;
     const userData = {
-      name,
+      username,
       email,
       password,
       userRole,
+      bookmarkedAds,
     };
 
-    const existUser =await User.findOne({ email: email });
+    const existUser = await User.findOne({ email: email });
 
     if (existUser) {
-      res.status(403).json({ error: "User already exist" });
+      res
+        .status(403)
+        .json({ error: `User with  email "${email}" already exist` });
     } else {
       const salt = await bcrypt.genSalt(10);
       userData.password = await bcrypt.hash(userData.password, salt);
       const result = await User.create(userData);
-      console.log(result)
+      console.log(result);
       res.status(200).send({ message: "User Created", data: result });
     }
   } catch (err) {
@@ -33,21 +36,23 @@ export const createUser = async (req, res) => {
 // post request
 export const login = async (req, res) => {
   const { email, password } = req.body;
-  // const email = 'joysm967@gmai.com'
-  const user = await User.findOne({ email: email });
+  try {
+    const user = await User.findOne({ email: email });
 
-  if (user) {
-    const passMatched = await bcrypt.compare(password, user.password);
-
-    if (passMatched) {
-      res.json(user);
+    if (user) {
+      const passMatched = await bcrypt.compare(password, user.password);
+      if (passMatched) {
+        res.json(user);
+      } else {
+        console.log("Incorrect password");
+        res.status(401).json({ error: "Incorrect Password" });
+      }
     } else {
-      console.log("Incorrect password");
-      res.status(401).json({ error: "Incorrect Password" });
+      console.log("user not found");
+      res.status(404).json({ error: `No user found with email "${email}"` });
     }
-  } else {
-    console.log("user not found");
-    res.status(404).json({ error: "User Not Found" });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error!" });
   }
 };
 
@@ -60,4 +65,4 @@ export const getAllUser = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Internal server error!" });
   }
-}
+};

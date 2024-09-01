@@ -3,53 +3,80 @@ import Ads from "../models/adsModel.js";
 // add ads
 // post request
 export const createAds = async (req, res) => {
+  try {
     const {
-        title,
-        description,
-        category,
-        division,
-        district,
-        area,
-        address,
-        rent,
-        floor,
-        bedroom,
-        bathroom,
-        availableForm,
-        phone,
-        whatsapp
+      authorId,
+      title,
+      description,
+      category,
+      division,
+      district,
+      area,
+      address,
+      rent,
+      floor,
+      bedroom,
+      bathroom,
+      availableForm,
+      phone,
+      whatsapp,
     } = req.body;
 
     const data = {
-        title,
-        category,
-        location: {
-            division,
-            district,
-            area
-        },
-        address,
-        rent,
-        floor,
-        bedroom,
-        bathroom,
-        availableForm,
-        contact: {
-            phone,
-            whatsapp
-        }
-    }
+      authorId,
+      title,
+      description,
+      category,
+      location: {
+        division,
+        district,
+        area,
+      },
+      address,
+      rent,
+      floor,
+      bedroom,
+      bathroom,
+      availableForm,
+      contact: {
+        phone,
+        whatsapp,
+      },
+    };
 
-    console.log(data);
-    const response = await Ads.create(data)
+    const response = await Ads.create(data);
     res.status(200).send(response);
-}
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error!" });
+  }
+};
 
-export const getAds = async(req, res) => {
-    const result = await Ads.find({})
-    // console.log(result)
-    res.send(result);
-}
+export const getAds = async (req, res) => {
+  try {
+    const result = await Ads.find({});
+    console.log(result);
+    res.status(200).send(result);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error!" });
+  }
+};
+
+export const getAdsByAuthor = async (req, res) => {
+  try {
+    const { authorId } = req.params;
+    // console.log({ authorId });
+    const ads = await Ads.find({ authorId });
+    res.status(200).send(ads);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error!" });
+  }
+};
+
+// export const deleteAds = async (req, res) => {
+//     const response = await Ads.deleteMany({});
+//     console.log(response)
+//     res.send(response)
+// }
 
 // const data = {
 //     title: '১টি ফ্ল্যাট ভাড়া হবে',
