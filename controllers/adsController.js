@@ -54,7 +54,7 @@ export const createAds = async (req, res) => {
 export const getAds = async (req, res) => {
   try {
     const result = await Ads.find({});
-    console.log(result);
+    // console.log({ result });
     res.status(200).send(result);
   } catch (error) {
     res.status(500).json({ error: "Internal server error!" });
@@ -68,6 +68,28 @@ export const getAdsByAuthor = async (req, res) => {
     const ads = await Ads.find({ authorId });
     res.status(200).send(ads);
   } catch (error) {
+    res.status(500).json({ error: "Internal server error!" });
+  }
+};
+
+export const getAdById = async (req, res) => {
+  try {
+    const { adId } = req.params;
+    console.log({ adId });
+    const ad = await Ads.findById(adId);
+    console.log({ ad });
+    res.status(200).send(ad);
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error!" });
+  }
+};
+
+export const deleteAd = async (req, res) => {
+  try {
+    const { adId } = req.params;
+    const response = await Ads.findByIdAndDelete(adId);
+    return res.status(200).send(response);
+  } catch (err) {
     res.status(500).json({ error: "Internal server error!" });
   }
 };
