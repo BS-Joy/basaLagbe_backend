@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Ads from "../models/adsModel.js";
 
 // add ads
@@ -54,7 +55,6 @@ export const createAds = async (req, res) => {
 export const getAds = async (req, res) => {
   try {
     const result = await Ads.find({});
-    // console.log({ result });
     res.status(200).send(result);
   } catch (error) {
     res.status(500).json({ error: "Internal server error!" });
@@ -75,9 +75,15 @@ export const getAdsByAuthor = async (req, res) => {
 export const getAdById = async (req, res) => {
   try {
     const { adId } = req.params;
-    console.log({ adId });
+
+    const isValid = mongoose.Types.ObjectId.isValid(adId);
+    console.log(isValid);
+
+    if (!isValid) {
+      return res.status(400).json({ error: "Invalid ad ID" });
+    }
+
     const ad = await Ads.findById(adId);
-    console.log({ ad });
     res.status(200).send(ad);
   } catch (err) {
     res.status(500).json({ error: "Internal server error!" });
@@ -94,27 +100,20 @@ export const deleteAd = async (req, res) => {
   }
 };
 
-// export const deleteAds = async (req, res) => {
-//     const response = await Ads.deleteMany({});
-//     console.log(response)
-//     res.send(response)
-// }
+export const updateAd = async (req, res) => {
+  try {
+    const { adId } = req.params;
+    const adData = req.body;
+    const { _id, ...dataToUpdate } = adData;
 
-// const data = {
-//     title: '১টি ফ্ল্যাট ভাড়া হবে',
-//     category: 'family',
-//     location: {
-//         divison,
-//         district,
-//         area: 'jatrabari',
-//         address: 'শনির আখড়া, জিয়া স্মরণী রোড, রসুল বাগ'
-//     } ,
-//     rent: '12000',
-//     floor: 4,
-//     bedroom: 2,
-//     bathroom: 1,
-//     contact: {
-//         phone: '021512254120',
-//         whatsapp: '021512254120'
-//     }
-// }
+    const response = await Ads.findByIdAndUpdate(adId, dataToUpdate, {
+      new: true,
+    });
+
+    console.log(response);
+
+    return res.status(200).send(response);
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error!" });
+  }
+};
