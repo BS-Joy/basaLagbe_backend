@@ -54,7 +54,7 @@ export const createAds = async (req, res) => {
 
 export const getAds = async (req, res) => {
   try {
-    const result = await Ads.find({});
+    const result = await Ads.find({ active: true }).lean();
     res.status(200).send(result);
   } catch (error) {
     res.status(500).json({ error: "Internal server error!" });
