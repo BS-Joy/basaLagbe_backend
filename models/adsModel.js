@@ -1,9 +1,10 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const adsSchema = mongoose.Schema(
   {
     authorId: {
-      type: String,
+      type: Schema.ObjectId,
+      ref: "user",
       require: true,
     },
     title: {
@@ -15,7 +16,8 @@ const adsSchema = mongoose.Schema(
       required: true,
     },
     category: {
-      type: String,
+      type: Schema.ObjectId,
+      ref: "category",
       required: true,
     },
     location: {

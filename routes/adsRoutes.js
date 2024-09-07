@@ -11,7 +11,7 @@ import {
 const adsRouter = express.Router();
 
 adsRouter.post("/", createAds);
-adsRouter.get("/", getAds);
+adsRouter.get("/getAds/:cat", getAds);
 adsRouter.get("/author/:authorId", getAdsByAuthor);
 adsRouter.get("/:adId", getAdById);
 adsRouter.delete("/:adId", deleteAd);
