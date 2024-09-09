@@ -57,11 +57,37 @@ export const createAds = async (req, res) => {
 export const getAds = async (req, res) => {
   try {
     const { cat } = req.params;
+    const { searchParams } = req.query;
+    let isCategoryId = true;
+    const searchFilters =
+      searchParams === "null" ? false : JSON.parse(searchParams);
+
+    if (cat === "false" || cat === "null" || cat === "undefined" || !cat) {
+      isCategoryId = false;
+    }
 
     let result;
 
-    if (cat !== "null") {
+    if (isCategoryId) {
       result = await Ads.find({ active: true, category: cat })
+        .populate({
+          path: "authorId",
+          model: User,
+        })
+        .populate({
+          path: "category",
+          model: Categories,
+        })
+        .lean();
+    } else if (searchFilters) {
+      result = await Ads.find({
+        active: true,
+        location: {
+          division: searchFilters.division,
+          district: searchFilters.district,
+          area: searchFilters.area,
+        },
+      })
         .populate({
           path: "authorId",
           model: User,
