@@ -68,8 +68,19 @@ export const getAds = async (req, res) => {
 
     let result;
 
+    // of: fetch category by title and check if its valid or not
+    let categoryId = null;
     if (isCategoryId) {
-      result = await Ads.find({ active: true, category: cat })
+      const category = await Categories.findOne({ title: cat });
+      if (category) {
+        categoryId = category._id;
+      } else {
+        return res.status(404).json({ error: "Category not found!" });
+      }
+    }
+
+    if (isCategoryId && categoryId) {
+      result = await Ads.find({ active: true, category: categoryId })
         .populate({
           path: "authorId",
           model: User,
