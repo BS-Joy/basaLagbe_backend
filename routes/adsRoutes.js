@@ -5,6 +5,7 @@ import {
   getAdById,
   getAds,
   getAdsByAuthor,
+  togglePublishUnpublish,
   updateAd,
 } from "../controllers/adsController.js";
 
@@ -15,6 +16,7 @@ adsRouter.get("/getAds/:cat", getAds);
 adsRouter.get("/author/:authorId", getAdsByAuthor);
 adsRouter.get("/:adId", getAdById);
 adsRouter.delete("/:adId", deleteAd);
-adsRouter.patch("/:adId", updateAd);
+adsRouter.patch("/", updateAd);
+adsRouter.patch("/:adId", togglePublishUnpublish);
 
 export default adsRouter;
