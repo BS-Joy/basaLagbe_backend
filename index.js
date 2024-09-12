@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import adsRouter from "./routes/adsRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import categoryRouter from "./routes/categoryRoutes.js";
+import bookmarkRouter from "./routes/bookmarkRoutes.js";
 
 dotenv.config();
 const port = process.env.PORT || 8000;
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use("/ads", adsRouter);
 app.use("/user", userRouter);
 app.use("/category", categoryRouter);
+app.use("/bookmark", bookmarkRouter);
 
 app.get("/", (req, res) => {
   console.log("Server running");

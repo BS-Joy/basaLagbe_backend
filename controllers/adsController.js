@@ -62,24 +62,36 @@ export const createAds = async (req, res) => {
   }
 };
 
+// get post
+// get request
 export const getAds = async (req, res) => {
+  const limit = 5;
   try {
     const { cat } = req.params;
-    const { searchParams } = req.query;
-    let isCategoryId = true;
+    const { searchParams, page } = req.query;
+
+    const skip = (parseInt(page) - 1) * limit;
+
+    let query;
+    let isCategory = true;
+
+    // of: check if has search params from the client side
     const searchFilters =
       searchParams === "null" ? false : JSON.parse(searchParams);
 
+    // of: check if has category from client side
     if (cat === "false" || cat === "null" || cat === "undefined" || !cat) {
-      isCategoryId = false;
+      isCategory = false;
     }
-
-    let result;
 
     // of: fetch category by title and check if its valid or not
     let categoryId = null;
-    if (isCategoryId) {
-      const category = await Categories.findOne({ title: cat });
+
+    // of: getting category id using category title
+    if (isCategory) {
+      const category = await Categories.findOne({
+        title: cat,
+      }).lean();
       if (category) {
         categoryId = category._id;
       } else {
@@ -87,49 +99,37 @@ export const getAds = async (req, res) => {
       }
     }
 
-    if (isCategoryId && categoryId) {
-      result = await Ads.find({ active: true, category: categoryId })
-        .populate({
-          path: "authorId",
-          model: User,
-        })
-        .populate({
-          path: "category",
-          model: Categories,
-        })
-        .lean();
+    if (isCategory && categoryId) {
+      query = { active: true, category: categoryId };
     } else if (searchFilters) {
-      result = await Ads.find({
+      query = {
         active: true,
         location: {
           division: searchFilters.division,
           district: searchFilters.district,
           area: searchFilters.area,
         },
-      })
-        .populate({
-          path: "authorId",
-          model: User,
-        })
-        .populate({
-          path: "category",
-          model: Categories,
-        })
-        .lean();
+      };
     } else {
-      result = await Ads.find({ active: true })
-        .populate({
-          path: "authorId",
-          model: User,
-        })
-        .populate({
-          path: "category",
-          model: Categories,
-        })
-        .lean();
+      query = { active: true };
     }
 
-    res.status(200).send(result);
+    const totalResult = await Ads.countDocuments(query);
+
+    const result = await Ads.find(query)
+      .populate({
+        path: "authorId",
+        model: User,
+      })
+      .populate({
+        path: "category",
+        model: Categories,
+      })
+      .skip(skip)
+      .limit(5)
+      .lean();
+
+    res.status(200).send({ total: totalResult, data: result });
   } catch (error) {
     res.status(500).json({ error: "Internal server error!" });
   }
