@@ -68,7 +68,7 @@ export const getAds = async (req, res) => {
   const limit = 5;
   try {
     const { cat } = req.params;
-    const { searchParams, page } = req.query;
+    const { searchParams, page = 1 } = req.query;
 
     const skip = (parseInt(page) - 1) * limit;
 
@@ -128,6 +128,8 @@ export const getAds = async (req, res) => {
       .skip(skip)
       .limit(5)
       .lean();
+
+    // console.log({ result });
 
     res.status(200).send({ total: totalResult, data: result });
   } catch (error) {

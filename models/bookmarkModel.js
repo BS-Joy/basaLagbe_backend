@@ -1,9 +1,9 @@
-import mongoose, { Schema, SchemaType } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const bookmarkSchema = mongoose.Schema(
   {
     userId: {
-      type: SchemaType.ObjectId,
+      type: Schema.ObjectId,
       require: true,
     },
     totalAds: {
@@ -23,7 +23,7 @@ const bookmarkSchema = mongoose.Schema(
   }
 );
 
-const Bookmarks =
+const Bookmark =
   mongoose.models.bookmarks || mongoose.model("bookmark", bookmarkSchema);
 
-export default Bookmarks;
+export default Bookmark;
