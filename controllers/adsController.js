@@ -5,6 +5,7 @@ import Categories from "../models/categoryModel.js";
 
 // add ads
 // post request
+// note: create an ads
 export const createAds = async (req, res) => {
   try {
     const {
@@ -64,6 +65,7 @@ export const createAds = async (req, res) => {
 
 // get post
 // get request
+// note: get all ads
 export const getAds = async (req, res) => {
   const limit = 5;
   try {
@@ -137,6 +139,7 @@ export const getAds = async (req, res) => {
   }
 };
 
+// note: get ads by autor
 export const getAdsByAuthor = async (req, res) => {
   try {
     const { authorId } = req.params;
@@ -147,6 +150,7 @@ export const getAdsByAuthor = async (req, res) => {
   }
 };
 
+// note: get ads by Id
 export const getAdById = async (req, res) => {
   try {
     const { adId } = req.params;
@@ -173,6 +177,7 @@ export const getAdById = async (req, res) => {
   }
 };
 
+// note: delete an ad
 export const deleteAd = async (req, res) => {
   try {
     const { adId } = req.params;
@@ -200,6 +205,7 @@ export const deleteAd = async (req, res) => {
   }
 };
 
+// note: update an ad
 export const updateAd = async (req, res) => {
   try {
     const adData = req.body;
@@ -242,6 +248,7 @@ export const updateAd = async (req, res) => {
   }
 };
 
+// note: toggle between publish and unpublish an ad
 export const togglePublishUnpublish = async (req, res) => {
   try {
     const { adId, active } = req.body;
@@ -274,3 +281,5 @@ export const togglePublishUnpublish = async (req, res) => {
     res.status(500).json({ error: "Internal server error!" });
   }
 };
+
+// note: get recent ads
