@@ -209,9 +209,11 @@ export const deleteAd = async (req, res) => {
 export const updateAd = async (req, res) => {
   try {
     const adData = req.body;
-    const { _id: adId, ...dataToUpdate } = adData;
+    const { _id: adId, isUpdatingAvailableForm, ...dataToUpdate } = adData;
 
-    const response = await Ads.findByIdAndUpdate(adId, dataToUpdate);
+    const response = await Ads.findByIdAndUpdate(adId, dataToUpdate, {
+      timestamps: isUpdatingAvailableForm,
+    });
 
     const newCategoryById = await Categories.findById(dataToUpdate?.category);
 
@@ -219,7 +221,7 @@ export const updateAd = async (req, res) => {
     const newCategoryTotalActiveAds = newCategoryById.totalActiveAds;
 
     // of: if category is changed during update any ads
-    if (dataToUpdate?.category !== response?.category) {
+    if (dataToUpdate?.category !== response?.category?.toString()) {
       // first get previous category
       const prevCategory = await Categories.findById(response?.category);
 
@@ -232,7 +234,7 @@ export const updateAd = async (req, res) => {
 
       prevCategory.save();
 
-      // then update the new category
+      // then add the new category to the ad
       newCategoryById.totalAds = newCategoryTotalAds + 1;
       if (response?.active) {
         newCategoryById.totalActiveAds = newCategoryTotalActiveAds + 1;
@@ -283,3 +285,17 @@ export const togglePublishUnpublish = async (req, res) => {
 };
 
 // note: get recent ads
+export const getRecentAds = async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const ads = await Ads.find({
+      updatedAt: {
+        $gte: sevenDaysAgo,
+      },
+    });
+
+    res.status(200).json(ads);
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error!" });
+  }
+};
