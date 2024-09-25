@@ -2,63 +2,34 @@ import mongoose from "mongoose";
 import Ads from "../models/adsModel.js";
 import User from "../models/userModel.js";
 import Categories from "../models/categoryModel.js";
+import multer from "multer";
 
 // add ads
 // post request
 // note: create an ads
 export const createAds = async (req, res) => {
   try {
-    const {
-      authorId,
-      title,
-      description,
-      category,
-      division,
-      district,
-      area,
-      address,
-      rent,
-      floor,
-      bedroom,
-      bathroom,
-      availableForm,
-      phone,
-      whatsapp,
-    } = req.body;
+    // const { images } = req.body;
+    const images = req.files;
 
-    const data = {
-      authorId,
-      title,
-      description,
-      category,
-      location: {
-        division,
-        district,
-        area,
-      },
-      address,
-      rent,
-      floor,
-      bedroom,
-      bathroom,
-      availableForm,
-      contact: {
-        phone,
-        whatsapp,
-      },
-    };
+    // console.log(data);
+    console.log(images);
 
-    const categoryToUpdate = await Categories.findByIdAndUpdate(
-      category,
-      {
-        $inc: { totalAds: 1, totalActiveAds: 1 },
-      },
-      { new: true } // Returns the updated document
-    );
+    // const categoryToUpdate = await Categories.findByIdAndUpdate(
+    //   category,
+    //   {
+    //     $inc: { totalAds: 1, totalActiveAds: 1 },
+    //   },
+    //   { new: true } // Returns the updated document
+    // );
 
-    const response = await Ads.create(data);
-    res.status(200).send(response);
+    // const response = await Ads.create(data);
+    // res.status(201).send(response);
   } catch (error) {
+    console.log(error);
+    if (error instanceof multer.MulterError) {
+      res.status(500).json({ multErerror: "Multer error!" });
+    }
     res.status(500).json({ error: "Internal server error!" });
   }
 };

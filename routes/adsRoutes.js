@@ -9,10 +9,11 @@ import {
   togglePublishUnpublish,
   updateAd,
 } from "../controllers/adsController.js";
+import adsUpload from "../middleware/adsMulter.js";
 
 const adsRouter = express.Router();
 
-adsRouter.post("/", createAds);
+adsRouter.post("/", adsUpload.array("images", 5), createAds);
 adsRouter.get("/getAds/:cat", getAds);
 adsRouter.get("/recentAds", getRecentAds);
 adsRouter.get("/author/:authorId", getAdsByAuthor);
