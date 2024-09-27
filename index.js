@@ -22,6 +22,13 @@ const app = express();
 // middleware
 app.use(cors());
 app.use(express.json());
+// for request timeout
+app.use((req, res, next) => {
+  res.setTimeout(30000, () => {
+    res.status(408).send({ error: "Request timeout" });
+  });
+  next();
+});
 
 app.use(express.static(__dirname + "/public"));
 app.use("/uploads", express.static("uploads"));

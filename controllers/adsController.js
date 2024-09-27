@@ -3,28 +3,64 @@ import Ads from "../models/adsModel.js";
 import User from "../models/userModel.js";
 import Categories from "../models/categoryModel.js";
 import multer from "multer";
+import cloudinary from "../config/cloudinary.js";
+import { getPublicId } from "../utils/public_id.js";
 
 // add ads
 // post request
 // note: create an ads
 export const createAds = async (req, res) => {
   try {
-    // const { images } = req.body;
+    const data = req.body;
     const images = req.files;
 
-    // console.log(data);
-    console.log(images);
+    const imgLinks = await Promise.all(
+      images.map((img) => {
+        const res = cloudinary.uploader.upload(
+          img.path,
+          {
+            public_id: img.originalname, // optional custom public ID
+            folder: "basaLagbe",
+            transformation: [{ quality: "auto" }],
+          },
+          (err, result) => {
+            if (err) {
+              console.log("Cloudinary error: ", err);
+              res.status(500).json({ error: err.message });
+            } else {
+              return result;
+            }
+          }
+        );
 
-    // const categoryToUpdate = await Categories.findByIdAndUpdate(
-    //   category,
-    //   {
-    //     $inc: { totalAds: 1, totalActiveAds: 1 },
-    //   },
-    //   { new: true } // Returns the updated document
-    // );
+        return res;
+      })
+    );
 
-    // const response = await Ads.create(data);
-    // res.status(201).send(response);
+    data["thumbnail"] = {
+      url: imgLinks[0].url,
+      public_id: imgLinks[0].public_id,
+    };
+
+    data["images"] = [];
+
+    for (let i = 1; i < images.length; i++) {
+      data.images.push({
+        url: imgLinks[i].url,
+        public_id: imgLinks[i].public_id,
+      });
+    }
+
+    const categoryToUpdate = await Categories.findByIdAndUpdate(
+      data?.category,
+      {
+        $inc: { totalAds: 1, totalActiveAds: 1 },
+      },
+      { new: true } // Returns the updated document
+    );
+
+    const response = await Ads.create(data);
+    res.status(201).send(response);
   } catch (error) {
     console.log(error);
     if (error instanceof multer.MulterError) {
@@ -154,6 +190,31 @@ export const deleteAd = async (req, res) => {
     const { adId } = req.params;
     const ad = await Ads.findById(adId);
 
+    if (ad?.thumbnail) {
+      const thumbnail_Public_id = ad?.thumbnail?.public_id;
+      cloudinary.uploader.destroy(thumbnail_Public_id, (err, result) => {
+        if (err) {
+          console.log("Cloudinary error: ", err);
+          res.status(500).json({ error: err.message });
+        }
+      });
+    }
+
+    // of: delete images from cloudinary
+    const deleteRes = await Promise.all(
+      ad?.images.map((img) => {
+        const public_id = img?.public_id;
+        const res = cloudinary.uploader.destroy(public_id, (err, result) => {
+          if (err) {
+            console.log("Cloudinary error: ", err);
+            res.status(500).json({ error: err.message });
+          }
+        });
+
+        return res;
+      })
+    );
+
     const categoryId = ad?.category;
 
     const adCategory = await Categories.findById(categoryId);
@@ -186,14 +247,15 @@ export const updateAd = async (req, res) => {
       timestamps: isUpdatingAvailableForm,
     });
 
-    const newCategoryById = await Categories.findById(dataToUpdate?.category);
-
-    const newCategoryTotalAds = newCategoryById.totalAds;
-    const newCategoryTotalActiveAds = newCategoryById.totalActiveAds;
-
-    // of: if category is changed during update any ads
+    // of: if category is changed during update the ad
     if (dataToUpdate?.category !== response?.category?.toString()) {
-      // first get previous category
+      // first get the new category detail
+      const newCategoryById = await Categories.findById(dataToUpdate?.category);
+
+      const newCategoryTotalAds = newCategoryById.totalAds;
+      const newCategoryTotalActiveAds = newCategoryById.totalActiveAds;
+
+      // then get previous category
       const prevCategory = await Categories.findById(response?.category);
 
       const prevCategoryTotalAds = prevCategory?.totalAds;
@@ -210,10 +272,10 @@ export const updateAd = async (req, res) => {
       if (response?.active) {
         newCategoryById.totalActiveAds = newCategoryTotalActiveAds + 1;
       }
-    }
 
-    // finally save the new category
-    newCategoryById.save();
+      // finally save the new category
+      newCategoryById.save();
+    }
 
     return res.status(200).send(response);
   } catch (err) {

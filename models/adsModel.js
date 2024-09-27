@@ -57,6 +57,12 @@ const adsSchema = mongoose.Schema(
       required: true,
       default: true,
     },
+    thumbnail: {
+      type: Object,
+    },
+    images: {
+      type: Array,
+    },
   },
   {
     timestamps: true,
