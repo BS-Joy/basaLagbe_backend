@@ -13,7 +13,7 @@ import adsUpload from "../middleware/adsMulter.js";
 
 const adsRouter = express.Router();
 
-adsRouter.post("/", adsUpload.array("images", 5), createAds);
+adsRouter.post("/", adsUpload.array("images", 10), createAds);
 adsRouter.get("/getAds/:cat", getAds);
 adsRouter.get("/recentAds", getRecentAds);
 adsRouter.get("/author/:authorId", getAdsByAuthor);
@@ -21,7 +21,7 @@ adsRouter.get("/author/:authorId", getAdsByAuthor);
 adsRouter.get("/:adId", getAdById);
 adsRouter.delete("/:adId", deleteAd);
 
-adsRouter.patch("/", updateAd);
+adsRouter.patch("/", adsUpload.array("newImages", 10), updateAd);
 adsRouter.patch("/:adId", togglePublishUnpublish);
 
 export default adsRouter;

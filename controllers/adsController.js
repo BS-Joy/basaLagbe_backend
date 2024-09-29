@@ -19,7 +19,6 @@ export const createAds = async (req, res) => {
         const res = cloudinary.uploader.upload(
           img.path,
           {
-            public_id: img.originalname, // optional custom public ID
             folder: "basaLagbe",
             transformation: [{ quality: "auto" }],
           },
@@ -37,19 +36,17 @@ export const createAds = async (req, res) => {
       })
     );
 
+    // of: setting thumbnail
     data["thumbnail"] = {
       url: imgLinks[0].url,
       public_id: imgLinks[0].public_id,
     };
 
-    data["images"] = [];
-
-    for (let i = 1; i < images.length; i++) {
-      data.images.push({
-        url: imgLinks[i].url,
-        public_id: imgLinks[i].public_id,
-      });
-    }
+    // of: setting images
+    data["images"] = imgLinks.slice(1).map((img) => ({
+      url: img.url,
+      public_id: img.public_id,
+    }));
 
     const categoryToUpdate = await Categories.findByIdAndUpdate(
       data?.category,
@@ -241,10 +238,97 @@ export const deleteAd = async (req, res) => {
 export const updateAd = async (req, res) => {
   try {
     const adData = req.body;
-    const { _id: adId, isUpdatingAvailableForm, ...dataToUpdate } = adData;
+    const {
+      _id: adId,
+      isUpdatingAvailableForm,
+      isUpdatingImages,
+      deletedImages,
+      ...dataToUpdate
+    } = adData;
+
+    const newImages = req.files;
+
+    if (JSON.parse(isUpdatingImages)) {
+      // of: if any image is removed then remove it from the cloudinary library as well
+      if (deletedImages) {
+        if (Array.isArray(deletedImages) && deletedImages?.length > 0) {
+          await Promise.all(
+            deletedImages?.map((public_id) => {
+              const res = cloudinary.uploader.destroy(
+                public_id,
+                (err, result) => {
+                  if (err) {
+                    console.log("Cloudinary error: ", err);
+                    res.status(500).json({ error: err.message });
+                  }
+                }
+              );
+            })
+          );
+        } else {
+          cloudinary.uploader.destroy(deletedImages, (err, result) => {
+            if (err) {
+              console.log("Cloudinary error: ", err);
+              res.status(500).json({ error: err.message });
+            }
+          });
+        }
+      }
+
+      // of: if any new images uploaded by the user
+      if (newImages?.length > 0) {
+        // of: the upload new images to cloudinary
+        const imgLinks = await Promise.all(
+          newImages?.map((img) => {
+            const res = cloudinary.uploader.upload(
+              img.path,
+              {
+                public_id: img.originalname, // optional custom public ID
+                folder: "basaLagbe",
+                transformation: [{ quality: "auto" }],
+              },
+              (err, result) => {
+                if (err) {
+                  console.log("Cloudinary error: ", err);
+                  res.status(500).json({ error: err.message });
+                }
+                return result;
+              }
+            );
+            return res;
+          })
+        );
+
+        // of: if there was not image before then add new images
+        if (!dataToUpdate?.images) {
+          dataToUpdate["images"] = imgLinks.map((img) => ({
+            url: img?.url,
+            public_id: img?.public_id,
+          }));
+        } else {
+          const allNewImages = imgLinks.map((img) => ({
+            url: img?.url,
+            public_id: img?.public_id,
+          }));
+          dataToUpdate.images = [...dataToUpdate?.images, ...allNewImages];
+        }
+      }
+
+      if (!dataToUpdate?.thumbnail) {
+        dataToUpdate["thumbnail"] = dataToUpdate.images[0];
+        if (
+          Array.isArray(dataToUpdate.images) &&
+          dataToUpdate.images.length > 0
+        ) {
+          dataToUpdate.images = [];
+        } else {
+          dataToUpdate.images = dataToUpdate.images.slice(1);
+        }
+      }
+    }
 
     const response = await Ads.findByIdAndUpdate(adId, dataToUpdate, {
-      timestamps: isUpdatingAvailableForm,
+      timestamps: JSON.parse(isUpdatingAvailableForm),
     });
 
     // of: if category is changed during update the ad
