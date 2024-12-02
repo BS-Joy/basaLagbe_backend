@@ -1,7 +1,8 @@
 import bcrypt from "bcryptjs";
 import userModel from "../models/userModel.js";
-import { unlinkAsync } from "../middleware/profilePictureMulter.js";
+// import { unlinkAsync } from "../middleware/profilePictureMulter.js";
 import multer from "multer";
+import cloudinary from "../config/cloudinary.js";
 
 // creating user
 // post request
@@ -77,20 +78,45 @@ export const updateUserProfile = async (req, res) => {
     const dataToUpdate = req.body;
     const profilePicture = req.file;
 
-    console.log(profilePicture);
+    // console.log({ profilePicture });
 
     // of: if user changing profile picture then first delete the previous profile picture
     if (profilePicture?.filename) {
-      dataToUpdate["profilePicture"] = profilePicture.filename;
       const user = await userModel.findById(userId);
-      const profilePictureFileName = user?.profilePicture;
 
-      // note: checking if profile picture is "". because during signup process profile picture is "" a empty string.
+      // checking if profile picture is not "". because during signup process profile picture is "" a empty string.
       if (user?.profilePicture) {
-        await unlinkAsync(
-          `public/uploads/profilePictures/${profilePictureFileName}`
+        const deleteImageRes = await cloudinary.uploader.destroy(
+          user?.profilePicture?.public_id,
+          (err) => {
+            if (err) {
+              console.log("Cloudinary error: ", err);
+              res.status(500).json({ error: err.message });
+            }
+          }
         );
       }
+
+      const res = await cloudinary.uploader.upload(
+        profilePicture.path,
+        {
+          folder: "basalagbe",
+          transformation: [{ quality: "auto" }],
+        },
+        (err, result) => {
+          if (err) {
+            console.log("Cloudinary upload error:", err);
+            res.status(500).json({ error: err.message });
+          } else {
+            return result;
+          }
+        }
+      );
+
+      dataToUpdate["profilePicture"] = {
+        url: res.secure_url,
+        public_id: res.public_id,
+      };
     }
 
     const result = await userModel.findByIdAndUpdate(userId, dataToUpdate, {

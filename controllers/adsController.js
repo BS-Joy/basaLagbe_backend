@@ -14,6 +14,8 @@ export const createAds = async (req, res) => {
     const data = req.body;
     const images = req.files;
 
+    console.log({ images });
+
     const imgLinks = await Promise.all(
       images.map((img) => {
         const res = cloudinary.uploader.upload(
@@ -38,13 +40,13 @@ export const createAds = async (req, res) => {
 
     // of: setting thumbnail
     data["thumbnail"] = {
-      url: imgLinks[0].url,
+      url: imgLinks[0].secure_url,
       public_id: imgLinks[0].public_id,
     };
 
     // of: setting images
     data["images"] = imgLinks.slice(1).map((img) => ({
-      url: img.url,
+      url: img.secure_url,
       public_id: img.public_id,
     }));
 
@@ -277,7 +279,7 @@ export const updateAd = async (req, res) => {
 
       // of: if any new images uploaded by the user
       if (newImages?.length > 0) {
-        // of: the upload new images to cloudinary
+        // of: upload new images to cloudinary
         const imgLinks = await Promise.all(
           newImages?.map((img) => {
             const res = cloudinary.uploader.upload(

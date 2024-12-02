@@ -22,6 +22,7 @@ const app = express();
 // middleware
 app.use(cors());
 app.use(express.json());
+
 // for request timeout
 app.use((req, res, next) => {
   res.setTimeout(30000, () => {
